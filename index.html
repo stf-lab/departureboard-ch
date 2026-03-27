@@ -837,9 +837,16 @@ function setStatus(state) {
   txt.textContent = state === 'ok' ? 'Temps réel' : 'Hors ligne';
 }
 
-const LINE_COLORS = { '60': 'line-60', '61': 'line-61' };
-const LINE_HEX = { '60': '#f59e0b', '61': '#06b6d4' };
-const GENERIC_HEX = '#8b5cf6';
+// Generate a distinct, consistent colour for any line identifier
+function lineColor(line) {
+  let hash = 0;
+  for (let i = 0; i < line.length; i++) {
+    hash = line.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  // Golden-ratio hue stepping for perceptual spread, fixed saturation/lightness for readability
+  const hue = Math.abs(hash * 137.508) % 360;
+  return `hsl(${Math.round(hue)}, 75%, 55%)`;
+}
 
 function renderLineFilters() {
   const lines = [...new Set(departures.map(d => d.line))].sort();
@@ -855,7 +862,7 @@ function renderLineFilters() {
   let html = `<div class="line-filter-all${allActive}" onclick="setLineFilter('all')">Tous</div>`;
 
   lines.forEach(line => {
-    const bg = LINE_HEX[line] || GENERIC_HEX;
+    const bg = lineColor(line);
     const isActive = activeLineFilters.has(line) ? ' active' : '';
     html += `<div class="line-filter-chip${isActive}" style="background:${bg};color:#000" onclick="setLineFilter('${line}')">${line}</div>`;
   });
@@ -915,7 +922,7 @@ function renderBoard() {
   const rows = displayGroups.map((group, i) => {
     const shortDest = shortDestination(group.destination);
     const platformHtml = group.platform ? `<span class="dep-platform">Pl. ${group.platform}</span>` : '';
-    const lc = LINE_COLORS[group.line] || 'line-generic';
+    const bg = lineColor(group.line);
     const groupKey = `${group.line}::${group.destination}`;
     const isExpanded = expandedRows.has(groupKey);
 
@@ -940,7 +947,7 @@ function renderBoard() {
     return `
       <div class="dep-row${expandedClass}" style="animation-delay:${i * 0.06}s" onclick="toggleRow('${groupKey.replace(/'/g, "\\'")}')">
         <div class="dep-header">
-          <div class="line-badge ${lc}">${group.line}</div>
+          <div class="line-badge" style="background:${bg};color:#000">${group.line}</div>
           <span class="dep-arrow">→</span>
           <div class="dep-destination">${shortDest}</div>
           ${platformHtml}
