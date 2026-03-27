@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TPG</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TPG">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --surface: #111827;
+    --surface-hover: #1a2236;
+    --border: #1e293b;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #475569;
+    --accent: #f59e0b;
+    --accent-glow: rgba(245, 158, 11, 0.15);
+    --green: #22c55e;
+    --green-dim: rgba(34, 197, 94, 0.12);
+    --red: #ef4444;
+    --red-dim: rgba(239, 68, 68, 0.12);
+    --blue: #3b82f6;
+    --blue-dim: rgba(59, 130, 246, 0.1);
+    --line60: #f59e0b;
+    --line61: #06b6d4;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 24px 16px 40px;
+  }
+
+  .header { margin-bottom: 16px; }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+
+  .station-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .station-badge .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--accent); }
+    50% { opacity: 0.6; box-shadow: 0 0 8px 2px var(--accent); }
+  }
+
+  .search-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .search-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .search-btn.geo-active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .search-btn.geo-loading svg {
+    animation: spin 1s linear infinite;
+  }
+
+  .station-name {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+
+  .station-name span {
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .status-bar .clock {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  .status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-indicator .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  .status-indicator.error .live-dot {
+    background: var(--red);
+    animation: none;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* Search modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .modal-overlay.open {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 60px;
+  }
+
+  .modal {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    width: 90%;
+    max-width: 480px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease-out;
+  }
+
+  @keyframes modalIn {
+    from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    padding: 4px 0;
+  }
+
+  .modal-search-input::placeholder { color: var(--text-muted); }
+
+  .modal-search-icon {
+    color: var(--text-muted);
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .modal-close:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  .modal-results {
+    overflow-y: auto;
+    flex: 1;
+    padding: 4px 0;
+  }
+
+  .modal-result-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-result-item:last-child { border-bottom: none; }
+  .modal-result-item:hover { background: var(--surface-hover); }
+  .modal-result-item.active { background: var(--accent-glow); }
+
+  .result-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+
+  .result-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .result-check {
+    font-size: 11px;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .modal-empty, .modal-loading {
+    padding: 28px 16px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* Line filters */
+  .line-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .line-filters:empty { display: none; }
+
+  .line-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 14px;
+    min-width: 40px;
+    height: 30px;
+    padding: 0 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    opacity: 0.4;
+  }
+
+  .line-filter-chip.active {
+    opacity: 1;
+    border-color: rgba(255,255,255,0.3);
+  }
+
+  .line-filter-chip:hover {
+    opacity: 0.8;
+  }
+
+  .line-filter-all {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 12px;
+    padding: 0 12px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .line-filter-all.active {
+    background: var(--accent-glow);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .line-filter-all:hover {
+    background: var(--surface-hover);
+  }
+
+  /* Departure rows */
+  .departures {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .dep-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    transition: all 0.3s ease;
+    animation: slideIn 0.4s ease-out backwards;
+    cursor: pointer;
+  }
+
+  .dep-row:hover {
+    background: var(--surface-hover);
+    border-color: #2a3654;
+  }
+
+  .dep-row.expanded {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+  }
+
+  .dep-row.expanded .dep-times {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  .dep-row.expanded .expand-hint { display: none; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .dep-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .line-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 20px;
+    min-width: 52px;
+    height: 38px;
+    padding: 0 8px;
+    border-radius: 6px;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .line-badge.line-60 { background: var(--line60); }
+  .line-badge.line-61 { background: var(--line61); }
+  .line-badge.line-generic { background: #8b5cf6; }
+
+  .dep-arrow {
+    font-size: 18px;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .dep-destination {
+    font-size: 26px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+  }
+
+  .dep-platform {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    background: var(--surface-hover);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .dep-times {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  .expand-hint {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    padding-left: 2px;
+    opacity: 0.6;
+  }
+
+  .time-chip {
+    font-family: var(--mono);
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--text-dim);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .time-chip:first-child {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .time-chip.imminent:first-child {
+    color: var(--red);
+    animation: flash 1s ease-in-out infinite;
+  }
+
+  @keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .rt-indicator {
+    color: var(--green);
+    font-size: 12px;
+    margin-left: 1px;
+    font-weight: 700;
+  }
+
+  .sched-indicator {
+    opacity: 0.4;
+    font-size: 10px;
+    margin-left: 1px;
+  }
+
+  .delay-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--red);
+    margin-left: 2px;
+  }
+
+  .dep-station-info {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .no-departures {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-dim);
+  }
+
+  .no-departures .icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  .no-departures p { font-size: 15px; }
+
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 60px 20px;
+    color: var(--text-dim);
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .footer {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .footer a { color: var(--text-dim); text-decoration: none; }
+
+  .refresh-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .refresh-btn:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+  }
+
+  @media (max-width: 480px) {
+    .app { padding: 12px 10px 16px; }
+    .header { margin-bottom: 8px; }
+    .station-name { font-size: 22px; }
+    .status-bar { font-size: 12px; margin-top: 4px; }
+    .dep-row { padding: 12px 10px; }
+    .dep-header { gap: 6px; margin-bottom: 6px; }
+    .dep-destination { font-size: 19px; min-width: 0; }
+    .dep-arrow { font-size: 15px; }
+    .time-chip:first-child { font-size: 16px; }
+    .time-chip { font-size: 16px; }
+    .dep-times { gap: 6px 12px; flex-wrap: nowrap; overflow: hidden; }
+    .line-badge { min-width: 36px; height: 28px; font-size: 14px; padding: 0 6px; }
+    .dep-platform { font-size: 10px; padding: 2px 5px; }
+    .dep-station-info { display: none; }
+    .departures { gap: 6px; }
+    .footer { margin-top: 8px; padding-top: 8px; }
+    .modal { width: 95%; max-height: 80vh; }
+    .modal-overlay.open { padding-top: 30px; }
+    .search-btn { font-size: 12px; padding: 5px 10px; }
+    .line-filters { margin-bottom: 6px; gap: 5px; }
+    .line-filter-chip { font-size: 12px; min-width: 34px; height: 26px; }
+    .line-filter-all { font-size: 11px; height: 26px; padding: 0 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <div class="station-name" id="station-name">Ornex, <span>Fruitière</span></div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="search-btn" onclick="geolocateStation()" id="geo-btn" title="Station la plus proche">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        </button>
+        <button class="search-btn" onclick="openSearch()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> Arrêt
+        </button>
+      </div>
+    </div>
+    <div class="status-bar">
+      <span class="clock" id="clock">--:--:--</span>
+      <span class="status-indicator" id="status">
+        <span class="live-dot"></span>
+        <span id="status-text">Connexion...</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="line-filters" id="line-filters"></div>
+
+  <div id="board">
+    <div class="loading">
+      <div class="spinner"></div>
+      <span>Chargement des départs...</span>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Données: <a href="https://transport.opendata.ch" target="_blank">transport.opendata.ch</a></span>
+    <button class="refresh-btn" onclick="fetchDepartures()">⟳ Actualiser</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeSearchOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-search-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+      <input type="text" class="modal-search-input" id="search-input"
+             placeholder="Chercher un arrêt..."
+             autocomplete="off"
+             oninput="onSearchInput(this.value)">
+      <button class="modal-close" onclick="closeSearch()">✕</button>
+    </div>
+    <div class="modal-results" id="search-results">
+      <div class="modal-empty">Tapez le nom d'un arrêt</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentStation = { id: '1401767', name: 'Ornex, Fruitière' };
+let departures = [];
+let refreshTimer = null;
+let searchTimer = null;
+let activeLineFilters = new Set(); // empty = all lines
+let expandedRows = new Set(); // tracks which rows are expanded
+const REFRESH_INTERVAL = 30000;
+
+// Persist station choice
+try {
+  const saved = localStorage.getItem('tpg_station');
+  if (saved) currentStation = JSON.parse(saved);
+} catch(e) {}
+
+function updateClock() {
+  document.getElementById('clock').textContent = new Date().toLocaleTimeString('fr-CH', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+function updateStationDisplay() {
+  const parts = currentStation.name.split(', ');
+  document.getElementById('station-name').innerHTML = parts.length >= 2
+    ? `${parts[0]}, <span>${parts.slice(1).join(', ')}</span>`
+    : currentStation.name;
+  document.title = 'TPG';
+}
+
+// Search modal
+function openSearch() {
+  document.getElementById('modal-overlay').classList.add('open');
+  const input = document.getElementById('search-input');
+  input.value = '';
+  input.focus();
+  document.getElementById('search-results').innerHTML =
+    '<div class="modal-empty">Tapez le nom d\'un arrêt</div>';
+}
+
+function closeSearch() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function closeSearchOutside(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeSearch();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSearch(); });
+
+function onSearchInput(query) {
+  clearTimeout(searchTimer);
+  if (query.trim().length < 2) {
+    document.getElementById('search-results').innerHTML =
+      '<div class="modal-empty">Tapez au moins 2 caractères</div>';
+    return;
+  }
+  document.getElementById('search-results').innerHTML = '<div class="modal-loading">Recherche...</div>';
+  searchTimer = setTimeout(() => searchStations(query.trim()), 300);
+}
+
+async function searchStations(query) {
+  try {
+    const res = await fetch(`https://transport.opendata.ch/v1/locations?query=${encodeURIComponent(query)}&type=station`);
+    if (!res.ok) throw new Error('Erreur réseau');
+    const data = await res.json();
+    const stations = (data.stations || []).filter(s => s.id && s.name);
+
+    if (stations.length === 0) {
+      document.getElementById('search-results').innerHTML = '<div class="modal-empty">Aucun arrêt trouvé</div>';
+      return;
+    }
+
+    document.getElementById('search-results').innerHTML = stations.map(s => {
+      const isActive = s.id === currentStation.id;
+      return `
+        <div class="modal-result-item ${isActive ? 'active' : ''}"
+             onclick="selectStation('${s.id}', \`${s.name.replace(/`/g, '')}\`)">
+          <div class="result-icon">🚏</div>
+          <div class="result-name">${s.name}</div>
+          ${isActive ? '<div class="result-check">✓</div>' : ''}
+        </div>`;
+    }).join('');
+  } catch (err) {
+    document.getElementById('search-results').innerHTML =
+      `<div class="modal-empty">Erreur: ${err.message}</div>`;
+  }
+}
+
+function selectStation(id, name) {
+  currentStation = { id, name };
+  activeLineFilters = new Set();
+  try { localStorage.setItem('tpg_station', JSON.stringify(currentStation)); } catch(e) {}
+  updateStationDisplay();
+  closeSearch();
+  departures = [];
+  document.getElementById('board').innerHTML =
+    '<div class="loading"><div class="spinner"></div><span>Chargement...</span></div>';
+  fetchDepartures();
+}
+
+// Departures
+async function fetchDepartures() {
+  try {
+    const res = await fetch(`https://transport.opendata.ch/v1/stationboard?id=${currentStation.id}&limit=100`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+
+    departures = data.stationboard.map(entry => {
+      const dep = entry.stop.departure;
+      const prog = entry.stop.prognosis?.departure;
+      const scheduledTime = new Date(dep);
+      const realTime = prog ? new Date(prog) : scheduledTime;
+      return {
+        line: entry.number || '?',
+        destination: entry.to || '',
+        scheduledTime,
+        realTime,
+        delay: Math.round((realTime - scheduledTime) / 60000),
+        rawDelay: entry.stop.delay || 0,
+        platform: entry.stop.platform,
+        hasRealtime: !!prog
+      };
+    }).filter(d => d.realTime > new Date(Date.now() - 60000))
+      .sort((a, b) => a.realTime - b.realTime);
+
+    setStatus('ok');
+    renderLineFilters();
+    renderBoard();
+  } catch (err) {
+    setStatus('error');
+    if (departures.length === 0) {
+      document.getElementById('board').innerHTML = `
+        <div class="no-departures"><div class="icon">⚠️</div>
+        <p>Impossible de charger les départs</p>
+        <p style="font-size:12px;margin-top:8px;color:var(--text-muted)">${err.message}</p></div>`;
+    }
+  }
+}
+
+function setStatus(state) {
+  const el = document.getElementById('status');
+  const txt = document.getElementById('status-text');
+  el.className = state === 'ok' ? 'status-indicator' : 'status-indicator error';
+  txt.textContent = state === 'ok' ? 'Temps réel' : 'Hors ligne';
+}
+
+const LINE_COLORS = { '60': 'line-60', '61': 'line-61' };
+const LINE_HEX = { '60': '#f59e0b', '61': '#06b6d4' };
+const GENERIC_HEX = '#8b5cf6';
+
+function renderLineFilters() {
+  const lines = [...new Set(departures.map(d => d.line))].sort();
+  const container = document.getElementById('line-filters');
+
+  if (lines.length <= 1) {
+    container.innerHTML = '';
+    activeLineFilters.clear();
+    return;
+  }
+
+  const allActive = activeLineFilters.size === 0 ? ' active' : '';
+  let html = `<div class="line-filter-all${allActive}" onclick="setLineFilter('all')">Tous</div>`;
+
+  lines.forEach(line => {
+    const bg = LINE_HEX[line] || GENERIC_HEX;
+    const isActive = activeLineFilters.has(line) ? ' active' : '';
+    html += `<div class="line-filter-chip${isActive}" style="background:${bg};color:#000" onclick="setLineFilter('${line}')">${line}</div>`;
+  });
+
+  container.innerHTML = html;
+}
+
+function setLineFilter(line) {
+  if (line === 'all') {
+    activeLineFilters.clear();
+  } else {
+    if (activeLineFilters.has(line)) {
+      activeLineFilters.delete(line);
+    } else {
+      activeLineFilters.add(line);
+    }
+  }
+  renderLineFilters();
+  renderBoard();
+}
+
+function shortDestination(dest) {
+  return dest
+    .replace('Genève, gare Cornavin', 'Gare Cornavin')
+    .replace('Genève, gare ', '')
+    .replace('Genève, ', 'GE ')
+    .replace("Gex, L'Aiglette", "Gex-L'Aiglette")
+    .replace('Gex, centre', 'Gex-Centre');
+}
+
+function renderBoard() {
+  const now = new Date();
+  const filtered = activeLineFilters.size > 0
+    ? departures.filter(d => activeLineFilters.has(d.line))
+    : departures;
+
+  if (filtered.length === 0) {
+    document.getElementById('board').innerHTML = `
+      <div class="no-departures"><div class="icon">🌙</div>
+      <p>Aucun départ à venir</p>
+      <p style="font-size:12px;margin-top:8px;color:var(--text-muted)">Le service est peut-être terminé pour aujourd'hui</p></div>`;
+    return;
+  }
+
+  const groups = new Map();
+  filtered.forEach(dep => {
+    const key = `${dep.line}::${dep.destination}`;
+    if (!groups.has(key)) {
+      groups.set(key, { line: dep.line, destination: dep.destination, platform: dep.platform, departures: [] });
+    }
+    groups.get(key).departures.push(dep);
+  });
+
+  const sorted = [...groups.values()].sort((a, b) => a.departures[0].realTime - b.departures[0].realTime);
+  const displayGroups = sorted;
+
+  const rows = displayGroups.map((group, i) => {
+    const shortDest = shortDestination(group.destination);
+    const platformHtml = group.platform ? `<span class="dep-platform">Pl. ${group.platform}</span>` : '';
+    const lc = LINE_COLORS[group.line] || 'line-generic';
+    const groupKey = `${group.line}::${group.destination}`;
+    const isExpanded = expandedRows.has(groupKey);
+
+    const chips = group.departures.map((dep, j) => {
+      const diffMin = Math.max(0, Math.floor((dep.realTime - now) / 60000));
+      const actualDelay = dep.delay || dep.rawDelay;
+      let timeStr, isImminent = false;
+
+      if (diffMin <= 0) { timeStr = "now"; isImminent = true; }
+      else if (diffMin < 60 && dep.hasRealtime) { timeStr = `in ${diffMin}'`; }
+      else { timeStr = dep.scheduledTime.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' }); }
+
+      const cls = isImminent && j === 0 ? ' imminent' : '';
+      const ind = dep.hasRealtime ? '<span class="rt-indicator">»</span>' : '<span class="sched-indicator">*</span>';
+      const dl = actualDelay > 0 ? `<span class="delay-badge">+${actualDelay}</span>` : '';
+      return `<span class="time-chip${cls}">${timeStr}${ind}${dl}</span>`;
+    }).join('');
+
+    const expandHint = group.departures.length > 3 ? '<span class="expand-hint">…</span>' : '';
+    const expandedClass = isExpanded ? ' expanded' : '';
+
+    return `
+      <div class="dep-row${expandedClass}" style="animation-delay:${i * 0.06}s" onclick="toggleRow('${groupKey.replace(/'/g, "\\'")}')">
+        <div class="dep-header">
+          <div class="line-badge ${lc}">${group.line}</div>
+          <span class="dep-arrow">→</span>
+          <div class="dep-destination">${shortDest}</div>
+          ${platformHtml}
+        </div>
+        <div class="dep-times">${chips}${expandHint}</div>
+        <div class="dep-station-info">Dép.: ${currentStation.name}</div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('board').innerHTML = `<div class="departures">${rows}</div>`;
+}
+
+function toggleRow(key) {
+  if (expandedRows.has(key)) {
+    expandedRows.clear();
+  } else {
+    expandedRows.clear();
+    expandedRows.add(key);
+  }
+  renderBoard();
+}
+
+// Geolocation
+async function geolocateStation() {
+  if (!navigator.geolocation) return;
+
+  const btn = document.getElementById('geo-btn');
+  btn.classList.add('geo-loading');
+
+  document.getElementById('board').innerHTML =
+    '<div class="loading"><div class="spinner"></div><span>Localisation en cours...</span></div>';
+
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true, timeout: 10000, maximumAge: 60000
+      });
+    });
+
+    const { latitude, longitude } = pos.coords;
+    const res = await fetch(`https://transport.opendata.ch/v1/locations?x=${latitude}&y=${longitude}&type=station`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const stations = (data.stations || []).filter(s => s.id && s.name);
+
+    if (stations.length > 0) {
+      const nearest = stations[0];
+      selectStation(nearest.id, nearest.name);
+      btn.classList.add('geo-active');
+    } else {
+      document.getElementById('board').innerHTML =
+        '<div class="no-departures"><div class="icon">📍</div><p>Aucun arrêt trouvé à proximité</p></div>';
+    }
+  } catch (err) {
+    const msg = err.code === 1 ? 'Accès à la position refusé'
+      : err.code === 2 ? 'Position indisponible'
+      : err.code === 3 ? 'Délai dépassé'
+      : err.message;
+    document.getElementById('board').innerHTML =
+      `<div class="no-departures"><div class="icon">📍</div><p>Géolocalisation impossible</p>
+       <p style="font-size:12px;margin-top:8px;color:var(--text-muted)">${msg}</p></div>`;
+    // Fall back to default or saved station
+    fetchDepartures();
+  } finally {
+    btn.classList.remove('geo-loading');
+  }
+}
+
+// Init
+updateStationDisplay();
+
+// Auto-geolocate on first visit (no saved station)
+const hasSavedStation = !!localStorage.getItem('tpg_station');
+if (!hasSavedStation && navigator.geolocation) {
+  geolocateStation();
+} else {
+  fetchDepartures();
+}
+
+refreshTimer = setInterval(fetchDepartures, REFRESH_INTERVAL);
+setInterval(renderBoard, 15000);
+</script>
+</body>
+</html>
