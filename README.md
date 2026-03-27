@@ -4,6 +4,12 @@ A lightweight, single-file real-time departure board for any public transport st
 
 ![Dark theme](https://img.shields.io/badge/theme-dark-1a2236) ![Single file](https://img.shields.io/badge/single-file-brightgreen) ![Zero dependencies](https://img.shields.io/badge/dependencies-none-blue)
 
+## Live
+
+**[https://stf-lab.github.io/departureboard-ch/departureboard.html](https://stf-lab.github.io/departureboard-ch/departureboard.html)**
+
+No installation needed — open the link and use it directly in your browser.
+
 ## Features
 
 - **Real-time departures** — live countdowns with minute-by-minute updates (auto-refresh every 30 seconds)
@@ -15,16 +21,6 @@ A lightweight, single-file real-time departure board for any public transport st
 - **Persistent station** — your last selected stop is saved in `localStorage`
 - **Mobile-ready** — responsive layout optimised for phones and tablet screens
 - **PWA-capable** — can be added to the iOS home screen for an app-like experience
-
-## Demo / Usage
-
-Just open `departureboard.html` in any modern browser. No server required.
-
-```
-open departureboard.html
-```
-
-Or serve it from any static host (GitHub Pages, Cloudflare Pages, Nginx, etc.).
 
 ## Data Source
 
@@ -59,16 +55,9 @@ The file is self-contained and straightforward to adapt:
 | Fonts | Google Fonts `<link>` in `<head>` |
 | Colour theme | CSS variables in `:root` |
 
-## Deployment on GitHub Pages
-
-1. Fork or clone this repository
-2. Go to **Settings > Pages**
-3. Set source to your `main` branch, root folder
-4. Your board will be live at `https://YOUR_USERNAME.github.io/departureboard-ch/`
-
 ## Browser Support
 
-Works in all modern browsers (Chrome, Firefox, Safari, Edge). Geolocation requires HTTPS when deployed remotely.
+Works in all modern browsers (Chrome, Firefox, Safari, Edge). Geolocation requires HTTPS — the live link above satisfies this automatically.
 
 ## License
 
