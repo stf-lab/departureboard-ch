@@ -1,4 +1,4 @@
-# 🚌 DepartureBoard CH
+# 🚉 DepartureBoard CH
 
 A lightweight, single-file real-time departure board for any public transport stop in Switzerland, built with plain HTML, CSS, and JavaScript. No build step, no dependencies.
 
