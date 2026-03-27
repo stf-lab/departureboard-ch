@@ -6,7 +6,7 @@ A lightweight, single-file real-time departure board for any public transport st
 
 ## Live
 
-**[https://stf-lab.github.io/departureboard-ch/departureboard.html](https://stf-lab.github.io/departureboard-ch/departureboard.html)**
+**[https://stf-lab.github.io/departureboard-ch/](https://stf-lab.github.io/departureboard-ch/)**
 
 No installation needed — open the link and use it directly in your browser.
 
@@ -21,6 +21,16 @@ No installation needed — open the link and use it directly in your browser.
 - **Persistent station** — your last selected stop is saved in `localStorage`
 - **Mobile-ready** — responsive layout optimised for phones and tablet screens
 - **PWA-capable** — can be added to the iOS home screen for an app-like experience
+
+## Use as a Tablet Dashboard
+
+The dark theme, live clock, and auto-refresh make DepartureBoard CH a great always-on display for a wall-mounted tablet or home dashboard.
+
+- Open the live link in the tablet's browser and set your stop once — the choice is saved automatically
+- The app uses the **Wake Lock API** to prevent the screen from sleeping (Chrome/Edge on Android and desktop)
+- On **iOS/iPadOS**, Wake Lock is not yet supported by Safari: go to **Settings > Display & Brightness > Auto-Lock** and set it to **Never**
+- For a cleaner look, use the browser's fullscreen mode (or add to home screen on iOS for a borderless, app-like experience)
+- Works well alongside other dashboard tools such as Home Assistant, MagicMirror, or any browser-based kiosk setup
 
 ## Data Source
 
@@ -57,7 +67,7 @@ The file is self-contained and straightforward to adapt:
 
 ## Browser Support
 
-Works in all modern browsers (Chrome, Firefox, Safari, Edge). Geolocation requires HTTPS — the live link above satisfies this automatically.
+Works in all modern browsers (Chrome, Firefox, Safari, Edge). Geolocation and Wake Lock require HTTPS — the live link above satisfies this automatically.
 
 ## License
 

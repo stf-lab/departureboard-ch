@@ -1009,6 +1009,17 @@ async function geolocateStation() {
   }
 }
 
+// Wake Lock — keep screen on when used as a dashboard
+async function requestWakeLock() {
+  try {
+    await navigator.wakeLock.request('screen');
+  } catch (e) {}
+}
+requestWakeLock();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') requestWakeLock();
+});
+
 // Init
 updateStationDisplay();
 
