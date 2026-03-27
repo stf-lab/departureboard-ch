@@ -6,7 +6,7 @@ A lightweight, single-file real-time departure board for any public transport st
 
 ## Live
 
-**[https://stf-lab.github.io/departureboard-ch/departureboard.html](https://stf-lab.github.io/departureboard-ch/departureboard.html)**
+**[https://stf-lab.github.io/departureboard-ch/departureboard.html](https://stf-lab.github.io/departureboard-ch/)**
 
 No installation needed — open the link and use it directly in your browser.
 
